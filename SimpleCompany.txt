@@ -1,0 +1,1123 @@
+#include "pch.h"
+#include <iostream>
+#include <iomanip>
+#include <string>
+#include <conio.h>
+#include <fstream>
+#include <vector>
+
+using namespace std;
+
+struct Company
+{
+	string name;
+	string surname;
+
+	
+	string department;
+	string post;
+
+	double salary;
+
+
+	
+};
+
+struct Accounts {
+	string password;
+	string login;
+	int role;
+};
+
+void create_file(ofstream&);
+void add_info_to_file(ofstream&, Company*, int);
+void add_info_to_acc_file(ofstream& , Accounts*, int);
+Company* read_from_file(ifstream&, Company*);
+Accounts* read_from_acc_file(ifstream&, Accounts*);
+Company* add_struct(Company*, int);
+Accounts* add_acc_struct(Accounts*, int );
+void set_info(Company*, int);
+void set_acc_info(Accounts*, int);
+void show_info(Company*, int );
+void show_acc_info(Accounts*, int);
+string password();
+string login();
+int role();
+void sort_acc_menu(Accounts*, int);
+void sort_by_name(Company*, int);
+void sort_by_surname(Company*, int);
+void sort_by_department(Company*, int);
+void sort_by_post(Company*, int);
+void sort_by_salary(Company*, int);
+void sort_menu(Company*, int);
+void search_menu(Company*, int);
+void admin_menu(ofstream&,Accounts*, Company*, int);
+int start_menu(Accounts*,int);
+void account_menu(ofstream&,Accounts*&, int);
+void edit_menu(Company*, int);
+void edit_acc_menu(Accounts*, int);
+void user_menu(Company*, int);
+void search_by_name(Company*, int);
+void search_by_surname(Company*, int);
+void search_by_department(Company*, int);
+void search_by_post(Company*, int);
+void search_by_salary(Company*, int);
+Company* delete_info(Company*, int);
+void change_info(Company*, int);
+void zadanie(Company* , int);
+int user_or_admin(Accounts*, int);
+void search_acc_menu(Accounts* , int);
+void change_acc_info(Accounts*, int);
+Accounts* delete_acc_info(Accounts*, int);
+void search_by_password(Accounts*, int);
+void search_by_login(Accounts*, int);
+bool check_for_last_admin(Accounts*, int);
+double salary();
+
+
+
+bool CHECK = true;
+int workerAmount = 0;
+int accountsAmount = 0;
+const string INFO_FILE= "baza.txt";
+const string ACCOUNTS_FILE = "acc.txt";
+
+
+int main()
+{
+	setlocale(LC_ALL, "rus");
+
+	ofstream file_for_recording;
+	ifstream file_for_reading;
+	ofstream file_for_acc_recording;
+	ifstream file_for_acc_reading;
+	Company* zavod = 0;
+	Accounts* acc = 0;
+
+	zavod = read_from_file(file_for_reading, zavod);
+	acc = read_from_acc_file(file_for_acc_reading, acc);
+	
+	int k = start_menu(acc, workerAmount);
+	while(k != 3 && k != 1 && k != 2)
+		k = start_menu(acc, workerAmount);
+	if (k == 1)
+		do{
+			zavod = add_struct(zavod, workerAmount);
+			admin_menu(file_for_recording, acc,zavod, workerAmount);
+		} while (CHECK == true);
+	else {
+		if (k == 2)
+			user_menu(zavod, workerAmount);
+	}
+
+	delete[] zavod;
+	return 1;
+}
+
+
+void create_file(ofstream& Ft) {
+
+	Ft.open(INFO_FILE);
+
+	Ft.close();
+
+}
+void create_acc_file(ofstream& Ft) {
+
+	Ft.open(ACCOUNTS_FILE);
+
+	Ft.close();
+
+}
+void add_info_to_file(ofstream& Ft, Company* obj, int amount) {
+
+	Ft.open(INFO_FILE);
+	for (int i = 0; i < workerAmount; i++) {
+		Ft << obj[i].name << " "
+			<< obj[i].surname << " "
+			<< obj[i].department << " "
+			<< obj[i].post << " "
+			<< obj[i].salary << endl;
+	}
+
+	Ft.close();
+}
+void add_info_to_acc_file(ofstream& Ft, Accounts* obj, int amount) {
+
+	Ft.open(ACCOUNTS_FILE);
+	for (int i = 0; i < accountsAmount; i++) {
+		Ft << obj[i].login << " "
+			<< obj[i].password << " "
+			<< obj[i].role << endl;
+	}
+
+	Ft.close();
+}
+Company* read_from_file(ifstream& Ft, Company* obj) {
+
+	string salaryString;
+	string tmp = "1";
+	Ft.open(INFO_FILE);
+	int i = 0;
+	while (!Ft.eof() && Ft.is_open()){
+		obj = add_struct(obj,workerAmount);
+		Ft >> obj[i].name;
+		if (obj[i].name == "")
+			break;
+		Ft >> obj[i].surname;
+		Ft >> obj[i].department;
+		Ft >> obj[i].post;
+		Ft >> salaryString;
+		if(salaryString != "")
+		obj[i].salary = stoi(salaryString);
+		workerAmount++;
+		i++;
+	} 
+	Ft.close();
+
+	return obj;
+}
+Accounts* read_from_acc_file(ifstream& Ft, Accounts* obj) {
+
+	string salaryString;
+
+	string tmp = "1";
+	Ft.open(ACCOUNTS_FILE);
+	int i = 0;
+	while (!Ft.eof() && Ft.is_open()) {
+		obj = add_acc_struct(obj, accountsAmount);
+		Ft >> obj[i].login;
+		if (obj[i].login == "")
+			break;
+		Ft >> obj[i].password;
+		Ft >> salaryString;
+		obj[i].role = stoi(salaryString);
+		i++;
+		accountsAmount++;
+	}
+	Ft.close();
+
+	return obj;
+}
+//--------------------------------------------------------------------
+Company* add_struct(Company* Obj, int amount) {
+	if (amount == 0)
+	{
+		Obj = new Company[amount + 1]; // выделение памяти для первой структуры
+	}
+	else
+	{
+		Company* tempObj = new Company[amount + 1];
+
+		for (int i = 0; i < amount; i++)
+		{
+			tempObj[i] = Obj[i]; // копируем во временный объект
+		}
+		delete[] Obj;
+
+		Obj = tempObj;
+	}
+	return Obj;
+}
+Accounts* add_acc_struct(Accounts* Obj, int amount) {
+	if (amount == 0)
+	{
+		Obj = new Accounts[amount + 1]; // выделение памяти для первой структуры
+	}
+	else
+	{
+		Accounts* tempObj = new Accounts[amount + 1];
+
+		for (int i = 0; i < amount; i++)
+		{
+			tempObj[i] = Obj[i]; // копируем во временный объект
+		}
+		delete[] Obj;
+
+		Obj = tempObj;
+	}
+	return Obj;
+}
+//--------------------------------------------------------------------
+void set_acc_info(Accounts* Obj, int amount) {
+	Obj[amount].login = login();
+	for (int i = 0; i < amount; i++) {
+		if (Obj[amount].login == Obj[i].login) {
+			cout << "Пользователь с таким логином уже существует!" << endl;
+			return;
+		}
+	}
+	Obj[amount].password = password();
+	while (Obj[amount].role != 1 && Obj[amount].role != 0) {
+		cout << "Введите роль.Роль может быть 1(администратор) и 0(пользователь): ";
+		Obj[amount].role = role();
+	}
+	accountsAmount++;
+	cout << "Запись успешно добавлена!" << endl;
+}
+void set_info(Company* obj, int amount) {//Ввод структуры
+
+	cin.ignore();
+
+	cout << "Введите имя: ";
+	getline(cin, obj[amount].name);
+
+
+	cout << "Введите фамилию: ";
+	getline(cin, obj[amount].surname);
+
+
+	cout << "Введите название отдела: ";
+	getline(cin, obj[amount].department);
+
+
+
+	cout << "Введите вашу должность: ";
+	getline(cin, obj[amount].post);
+
+
+	cout << "Введите вашу зарплату: ";
+	obj[amount].salary = salary();
+
+}
+//--------------------------------------------------------------------
+void show_info(Company* obj, int amount) {//Вывод структуры
+
+	cout << "№|" << setw(13) << right << "Имя|" << setw(14) << right << "Фамилия|" << setw(14) << right << "Oтдел|" << setw(14) << right << "Должность|" << setw(12) << right << "Зарплата|"  << endl;
+	//cout << "№\t" << "Имя\t" << "Фамилия\t" << setw(9) << right << "Oтдел" << setw(15) << right << "Должность\t" << setw(12) << right << "Зарплата" << endl;
+	cout << "---------------------------------------------------------------------" << endl;
+
+	for (int i = 0; i < workerAmount; i++)
+	{
+		cout << i + 1 << "|" << setw(12) << right << obj[i].name << "|" << setw(13) << right << obj[i].surname << "|" << setw(13) << right << obj[i].department << "|" << setw(13) << right << obj[i].post << "|" << setw(11) << right << obj[i].salary << "|" << endl;
+
+	}
+}
+void show_acc_info(Accounts* obj, int amount) {//Вывод структуры
+
+	cout << "№|" << setw(13) << right << "Логин|" << setw(14) << right << "Пароль|" << setw(14) << right << "Роль|" << setw(14) << right << endl;
+	cout << "---------------------------------------------------------" << endl;
+
+	for (int i = 0; i < accountsAmount; i++)
+	{
+		cout << i + 1 << "|" << setw(12) << right << obj[i].login << "|" << setw(13) << right << obj[i].password << "|" << setw(13) << right << obj[i].role << "|" << endl;
+	}
+}
+//--------------------------------------------------------------------
+string password()
+{
+	char password[100], c = ' ';
+	int i = 0;
+	bool check = true;
+	while (check) {
+	cout << "Введите пароль(не более 10 символов): ";
+		while (i <= 20) {
+			c = _getch();
+			if (c == 13)
+				break;
+			else
+				if (c == 8) {
+					if (i == 0)
+						continue;
+					cout << "\b \b";
+					i--;
+				}
+				else {
+					password[i] = c;
+					cout << "*";
+					i++;
+				}
+		}
+		if (i > 10) {
+			cout << endl << endl << "Вы ввели больше 10 символов" << endl;
+			i = 0;
+			memset(password, 0, 100);//очищает память от указателя password на размер 100
+		}
+		else {
+			check = false;
+		}
+	}
+	cout << endl;
+	
+	password[i] = '\0';
+	return password;
+}
+string login() {
+
+	cin.ignore();
+
+	string login;
+
+	cout << "Введите login: ";
+	getline(cin, login);
+
+	return login;
+}
+int role() {
+	int r;
+	while (!(cin >> r) || cin.get() != '\n')
+	{
+		cout << "Введите роль.Роль может быть 1(администратор) и 0(пользователь):";
+		cin.clear();
+		cin.ignore(numeric_limits<streamsize>::max(), '\n');
+
+	}
+	return r;
+}
+double salary() {
+	double r;
+	while (!(cin >> r) || cin.get() != '\n')
+	{
+		cout << "Введите вашу зарплату: ";
+		cin.clear();
+		cin.ignore(numeric_limits<streamsize>::max(), '\n');
+
+	}
+	return r;
+}
+int user_or_admin(Accounts* obj, int amount) {
+
+	string log = login();
+	string pass = password();
+	int i = 0;
+	for (; i < accountsAmount; i++) {
+		if (log == obj[i].login && pass == obj[i].password)
+			break;
+	}
+	if (obj[i].role == 1) {
+		cout << "Вы выполнили вход как администратор!" << endl;
+		return 1;
+	}
+	else
+	{
+		if (obj[i].role == 0) {
+			cout << "Вы выполнили вход как пользователь!" << endl;
+			return 2;
+		}
+	}
+
+	cout << endl;
+	cout << endl << "Логин и/или пароль не совпадают!" << endl;
+
+}
+//--------------------------------------------------------------------
+void sort_by_name(Company* obj, int amount) {
+
+	for (int i = 0; i < amount - 1; i++) {
+			for (int j = 0; j < amount - i - 1; j++) {
+				if (obj[j].name > obj[j+1].name) {
+					swap(obj[j], obj[j + 1]);
+				}
+			}
+		}
+	show_info(obj, amount);
+}
+void sort_by_surname(Company* obj, int amount) {
+
+	for (int i = 0; i < amount - 1; i++) {
+		for (int j = 0; j < amount - i - 1; j++) {
+			if (obj[j].surname > obj[j + 1].surname) {
+				swap(obj[j], obj[j + 1]);
+			}
+		}
+	}
+	show_info(obj, amount);
+}
+void sort_by_department(Company* obj, int amount) {
+
+	for (int i = 0; i < amount - 1; i++) {
+		for (int j = 0; j < amount - i - 1; j++) {
+			if (obj[j].department > obj[j + 1].department) {
+				swap(obj[j], obj[j + 1]);
+			}
+		}
+	}
+	show_info(obj, amount);
+}
+void sort_by_post(Company* obj, int amount) {
+
+	for (int i = 0; i < amount - 1; i++) {
+		for (int j = 0; j < amount - i - 1; j++) {
+			if (obj[j].post > obj[j + 1].post) {
+				swap(obj[j], obj[j + 1]);
+			}
+		}
+	}
+	show_info(obj, amount);
+}
+void sort_by_salary(Company* obj, int amount) {
+
+	for (int i = 0; i < amount - 1; i++) {
+		for (int j = 0; j < amount - i - 1; j++) {
+			if (obj[j].salary > obj[j + 1].salary) {
+				swap(obj[j], obj[j + 1]);
+			}
+		}
+	}
+	show_info(obj, amount);
+}
+//-------------------------------------------------------------------
+int start_menu(Accounts* obj,int amount){
+	char choice;
+	cout << endl << "1 - Авторизация" << endl
+		<< "0 - Выход" << endl;
+	cin >> choice;
+	switch (choice) {
+		case '1':
+			return user_or_admin(obj,amount);
+			break;
+		case '0':
+			return 3;
+			break;
+		default:
+			break;
+	}
+}
+void admin_menu(ofstream &Ft,Accounts* dop, Company* obj, int amount) {
+
+	char code;
+	cout << "-------------------Меню админа-------------------" << endl;
+	cout << "1 - Показать данные" << endl
+		 << "2 - Действия с данными(изменить,удалить,добавить)" << endl
+		 << "3 - Сортировать данные" << endl
+		 << "4 - Поиск" << endl
+		 << "5 - Работа с аккаунтами" << endl
+		 << "6 - Задание" << endl
+		 << "0 - Выход" << endl;
+	cout << "Введите номер: ";
+	cin >> code;
+	switch (code)
+	{
+	case '1':
+		show_info(obj, amount);
+		break;
+	case '2':
+		edit_menu(obj, amount);
+		break;
+	case '3':
+		sort_menu(obj, amount);
+		break;
+	case '4':
+		search_menu(obj, amount);
+		break;
+	case '5':
+		account_menu(Ft,dop, accountsAmount);
+		break;
+	case '6':
+		zadanie(obj,amount);
+		break;
+	case '0':
+		create_file(Ft);
+		add_info_to_file(Ft, obj, amount);
+		CHECK = false;
+		break;
+	default:
+		cout << "Ошибка ввода!" << endl;
+		break;
+	}
+}
+void account_menu(ofstream &Ft,Accounts*& obj, int amount) {
+
+	char code=0;
+	int endgame = 0;
+	while (code != 'b' && code != '0' && endgame == 0) {
+		cout << "------------------Работа с аккаунтами-----------------" << endl;
+		cout << "1.Показать данные" << endl
+			<< "2.Действия с данными(изменить,удалить,добавить)" << endl
+			<< "3.Поиск" << endl
+			<< "4.Работа с информацией" << endl
+			<< "0.Выход" << endl;
+		cout << "Введите номер: ";
+		cin >> code;
+		switch (code)
+		{
+		case '1':
+			show_acc_info(obj, amount);
+			break;
+		case '2':
+			obj = add_acc_struct(obj, accountsAmount);
+			edit_acc_menu(obj, accountsAmount);
+			break;
+		case '3':
+			search_acc_menu(obj, amount);
+			break;
+		case '4':
+			endgame = 1;
+			break;
+		case '0':
+			create_acc_file(Ft);
+			add_info_to_acc_file(Ft, obj, amount);
+			CHECK = false;
+			break;
+		default:
+			cout << "Ошибка ввода!" << endl;
+			break;
+		}
+	}
+}
+void edit_menu(Company* obj, int amount) {
+
+	char choice =0 ;
+	while (choice != '1' && choice != '2' && choice != '3' && choice != 'b') {
+		cout << "1.Добавить данные" << endl
+			<< "2.Изменить данные" << endl
+			<< "3.Удалить данные" << endl;
+		cout << "b - Вернутся назад" << endl;
+		cin >> choice;
+
+		switch (choice)
+		{
+		case '1':
+			set_info(obj, amount);
+			workerAmount++;
+			cout << "Запись успешно добавлена!" << endl;
+			break;
+		case '2':
+			change_info(obj, amount);
+			break;
+		case '3':
+			delete_info(obj, amount);
+			workerAmount--;
+			cout << "Запись успешно удалена!" << endl;
+			break;
+		case 'b':
+			break;
+		default:
+			cout << "Ошибка ввода!" << endl;
+			break;
+		}
+	}
+
+}
+void edit_acc_menu(Accounts* obj, int amount) {
+
+	char choice;
+
+	cout << "1.Добавить данные" << endl
+		<< "2.Изменить данные" << endl
+		<< "3.Удалить данные" << endl;
+	cout << "b - Вернутся назад" << endl;
+	cin >> choice;
+
+	switch (choice)
+	{
+	case '1':
+		set_acc_info(obj, amount);
+		break;
+	case '2':
+		change_acc_info(obj, amount);
+		break;
+	case '3':
+		delete_acc_info(obj, amount);
+		
+		break;
+	case 'b':
+		break;
+	default:
+		cout << "Ошибка ввода!" << endl;
+		break;
+	}
+
+}
+void sort_menu(Company* obj, int amount) {
+
+	char code=0;
+	while (code != '1' &&  code != '2' && code != '3' && code != '4' && code != '5' && code != 'b') {
+		cout << "1.Сортировка по имени\n"
+			<< "2.Сортировка по фамилии\n"
+			<< "3.Сортировка по отделу\n"
+			<< "4.Сортировка по должности\n"
+			<< "5.Сортировка по зарплате\n"
+			<< "b - Назад\n";
+		cout << "Введите код: ";
+		cin >> code;
+		switch (code)
+		{
+		case '1':
+			cout << "Сортировка по имени" << endl;
+			sort_by_name(obj, amount);
+			break;
+		case '2':
+			cout << "Сортировка по фамилии" << endl;
+			sort_by_surname(obj, amount);
+			break;
+		case '3':
+			cout << "Сортировка по отделу" << endl;
+			sort_by_department(obj, amount);
+			break;
+		case '4':
+			cout << "Сортировка по должности" << endl;
+			sort_by_post(obj, amount);
+			break;
+		case '5':
+			cout << "Сортировка по зарплате" << endl;
+			sort_by_salary(obj, amount);
+			break;
+		case 'b':
+			break;
+		default:
+			cout << "Ошибка ввода!" << endl;
+			break;
+		}
+	}
+
+}
+void sort_acc_menu(Accounts* obj, int amount) {
+
+	char code = 0;
+
+	while (code != '1' &&  code != '2' && code != '3' && code != '4' && code != '5' && code != 'b') {
+		cout << "1.Сортировка по логину\n" << "2.Сортировка по парол\n";
+		cout << "Введите код: ";
+		cin >> code;
+		switch (code)
+		{
+		case '1':
+
+			break;
+		case '2':
+
+			break;
+		case 'b':
+			break;
+		default:
+			cout << "Ошибка ввода!" << endl;
+			break;
+		}
+	}
+
+}
+void search_menu(Company* obj, int amount) {
+
+	char code = 0;
+
+	while (code != '1' &&  code != '2' && code != '3' && code != '4' && code != '5' && code != 'b') {
+		cout << "1.Поиск по имени\n"
+			<< "2.Поиск по фамилии\n"
+			<< "3.Поиск по отделу\n"
+			<< "4.Поиск по должности\n"
+			<< "5.Поиск по зарплате\n"
+			<< "b\n";
+		cout << "Введите код: ";
+		cin >> code;
+		switch (code)
+		{
+		case '1':
+			cout << "Поиск по имени" << endl;
+			search_by_name(obj, amount);
+			break;
+		case '2':
+			cout << "Поиск по фамилии" << endl;
+			search_by_surname(obj, amount);
+			break;
+		case '3':
+			cout << "Поиск по отделу" << endl;
+			search_by_department(obj, amount);
+			break;
+		case '4':
+			cout << "Поиск по должности" << endl;
+			search_by_post(obj, amount);
+			break;
+		case '5':
+			cout << "Поиск по зарплате" << endl;
+			search_by_salary(obj, amount);
+			break;
+		case 'b':
+			break;
+		default:
+			cout << "Ошибка ввода!" << endl;
+			break;
+		}
+	}
+
+}
+void search_acc_menu(Accounts* obj, int amount) {
+
+	char code = 0;
+
+	while (code != '1' &&  code != '2' && code != 'b') {
+		cout << "1.Поиск по логину\n"
+			<< "2.Поиск по паролю\n"
+			<< "b - Вернутся назад\n";
+		cout << "Введите код: ";
+		cin >> code;
+		switch (code)
+		{
+		case '1':
+			cout << "Поиск по логину" << endl;
+			search_by_login(obj, amount);
+			break;
+		case '2':
+			cout << "Поиск по паролю" << endl;
+			search_by_password(obj, amount);
+			break;
+		case 'b':
+			break;
+		default:
+			cout << "Ошибка ввода!"<< endl;
+			break;
+		}
+	}
+
+}
+void user_menu(Company* obj, int amount) {
+
+	char code = 0;
+	cout << endl;
+	while (code != 'b' && code != '0') {
+		cout << "-----------Меню пользователя------" << endl;
+		cout << "1.Показать данные" << endl
+			<< "2.Сортировать данные" << endl
+			<< "3.Поиск" << endl
+			<< "4.Задание" << endl
+			<< "0.Выход" << endl;
+		cout << "Введите номер: ";
+		cin >> code;
+		switch (code)
+		{
+		case '1':
+			show_info(obj, amount);
+			break;
+		case '2':
+			sort_menu(obj, amount);
+			break;
+		case '3':
+			search_menu(obj, amount);
+			break;
+		case '4':
+			zadanie(obj, amount);
+			break;
+		case '0':
+			CHECK = false;
+			break;
+		default:
+			cout << "Ошибка ввода!" << endl;
+			break;
+		}
+	}
+}
+//-------------------------------------------------------------------
+void search_by_name(Company* obj, int amount) {
+
+	cin.ignore();
+
+	string nametmp;
+	cout << "Введите имя: ";
+	getline(cin, nametmp);
+
+	
+
+	cout << "№\t" << "Имя\t" << "Фамилия\t" << setw(9) << right << "Oтдел" << setw(15) << right << "Должность\t" << setw(12) << right << "Зарплата" << endl;
+	cout << "--------------------------------------------------------------" << endl;
+	for (int i = 0; i < amount; i++) {
+		if (nametmp == obj[i].name) {
+			cout << i + 1 << setw(10) << right << obj[i].name << setw(12) << right << obj[i].surname << setw(10) << right << obj[i].department << setw(14) << right << obj[i].post << setw(12) << right << obj[i].salary << endl;
+
+		}
+	}
+}
+void search_by_surname(Company* obj, int amount) {
+
+	cin.ignore();
+
+	string nametmp;
+	cout << "Введите фамилию: ";
+	getline(cin, nametmp);
+
+	
+
+	cout << "№\t" << "Имя\t" << "Фамилия\t" << setw(9) << right << "Oтдел" << setw(15) << right << "Должность\t" << setw(12) << right << "Зарплата" << endl;
+	cout << "--------------------------------------------------------------" << endl;
+	for (int i = 0; i < amount; i++) {
+		if (nametmp == obj[i].surname) {
+			cout << i + 1 << setw(10) << right << obj[i].name << setw(12) << right << obj[i].surname << setw(10) << right << obj[i].department << setw(14) << right << obj[i].post << setw(12) << right << obj[i].salary << endl;
+		
+		}
+	}
+}
+void search_by_department(Company* obj, int amount) {
+
+	cin.ignore();
+
+	string nametmp;
+	cout << "Введите отдел: ";
+	getline(cin, nametmp);
+	
+
+	cout << "№\t" << "Имя\t" << "Фамилия\t" << setw(9) << right << "Oтдел" << setw(15) << right << "Должность\t" << setw(12) << right << "Зарплата" << endl;
+	cout << "--------------------------------------------------------------" << endl;
+	for (int i = 0; i < amount; i++) {
+		if (nametmp == obj[i].department) {
+			cout << i + 1 << setw(10) << right << obj[i].name << setw(12) << right << obj[i].surname << setw(10) << right << obj[i].department << setw(14) << right << obj[i].post << setw(12) << right << obj[i].salary << endl;
+		
+		}
+	}
+}
+void search_by_post(Company* obj, int amount) {
+
+	cin.ignore();
+
+	string nametmp;
+	cout << "Введите должность: ";
+	getline(cin, nametmp);
+
+	cout << "№\t" << "Имя\t" << "Фамилия\t" << setw(9) << right << "Oтдел" << setw(15) << right << "Должность\t" << setw(12) << right << "Зарплата" << endl;
+	cout << "--------------------------------------------------------------" << endl;
+	for (int i = 0; i < amount; i++) {
+		if (nametmp == obj[i].post) {
+			cout << i + 1 << setw(10) << right << obj[i].name << setw(12) << right << obj[i].surname << setw(10) << right << obj[i].department << setw(14) << right << obj[i].post << setw(12) << right << obj[i].salary << endl;
+		}
+	}
+}
+void search_by_salary(Company* obj, int amount) {
+
+	cin.ignore();
+
+	int nametmp;
+	cout << "Введите зарплату: ";
+	cin >> nametmp;
+	int tmp=1;
+
+	cout << "№\t" << "Имя\t" << "Фамилия\t" << setw(9) << right << "Oтдел" << setw(15) << right << "Должность\t" << setw(12) << right << "Зарплата" << endl;
+	cout << "--------------------------------------------------------------" << endl;
+	for (int i = 0; i < amount; i++) {
+		if (nametmp == obj[i].salary) {
+			cout << i + 1 << setw(10) << right << obj[i].name << setw(12) << right << obj[i].surname << setw(10) << right << obj[i].department << setw(14) << right << obj[i].post << setw(12) << right << obj[i].salary << endl;
+			tmp++;
+		}
+	}
+}
+void search_by_login(Accounts* obj, int amount) {
+
+	cin.ignore();
+
+	string nametmp;
+	cout << "Введите логин: ";
+	getline(cin,nametmp);
+	int tmp = 1;
+
+	cout << "№\t" << "Логин\t" << "Пароль\t" << setw(9) << right << "Роль" << setw(15) << right << endl;
+	cout << "--------------------------------------------------------------" << endl;
+	for (int i = 0; i < amount; i++) {
+		if (nametmp == obj[i].login) {
+			cout << i + 1 << setw(10) << right << obj[i].login << setw(12) << right << obj[i].password << setw(10) << right << obj[i].role << setw(14) << right << endl;
+			tmp++;
+		}
+	}
+}
+void search_by_password(Accounts* obj, int amount) {
+
+	cin.ignore();
+
+	string nametmp;
+	cout << "Введите пароль: ";
+	getline(cin, nametmp);
+	int tmp = 1;
+
+	cout << "№\t" << "Логин\t" << "Пароль\t" << setw(9) << right << "Роль" << setw(15) << right << endl;
+	cout << "--------------------------------------------------------------" << endl;
+	for (int i = 0; i < amount; i++) {
+		if (nametmp == obj[i].password) {
+			cout << i + 1 << setw(10) << right << obj[i].login << setw(12) << right << obj[i].password << setw(10) << right << obj[i].role << setw(14) << right << endl;
+			tmp++;
+		}
+	}
+}
+//-------------------------------------------------------------------
+Company* delete_info(Company* obj, int amount) {
+	int numToDelete;
+	show_info(obj, amount);
+	cout << "Введите номер для удаления: ";
+	cin >> numToDelete;
+	int tmp = 0;
+	Company* tempObj = new Company[amount];
+	for (int i = 0; i < amount; i++) {
+		if (numToDelete != (i + 1)) {
+			tempObj[tmp] = obj[i];
+			tmp++;
+		}
+	}
+	for(int i=0;i<tmp;i++)
+		obj[i] = tempObj[i];
+
+	delete[] tempObj;
+	return obj;
+}
+Accounts* delete_acc_info(Accounts* obj, int amount) {
+	int numToDelete;
+	int tmp;
+	show_acc_info(obj, amount);
+	cout << "Введите номер для удаления: ";
+	cin >> numToDelete;
+	cout << "Вы точно хотите удалить запись?(1 - Да,2 - Нет)" << endl;
+	cin >> tmp;
+	if (tmp != 1)
+		return obj;
+	int num = 0;
+	Accounts* tempObj = new Accounts[amount];
+	for (int i = 0; i < amount; i++) {
+		if (numToDelete != (i + 1)) {
+			tempObj[num] = obj[i];
+			num++;
+		}
+	}
+	if (check_for_last_admin(tempObj, amount) == false) {
+		cout << "Вы не можете удалить последнюю запись с правами администратора!" << endl;
+		return obj;
+	}
+	for (int i = 0; i < num; i++)
+		obj[i] = tempObj[i];
+
+	delete[] tempObj;
+	cout << "Запись успешно удалена!" << endl;
+	accountsAmount--;
+	return obj;
+}
+//-------------------------------------------------------------------
+void change_info(Company* obj, int amount) {
+
+	int numberToChange;
+	show_info(obj, amount);
+
+	cout << "Введите номер человека: ";
+	cin >> numberToChange;
+
+	Company* tempObj = new Company[amount];
+	//tempObj[1] = obj[1];
+	for (int i = 0; i < amount; i++) {
+		if (numberToChange == (i + 1))
+		{
+			set_info(obj, i);
+		}
+		else {
+			tempObj[i] = obj[i];
+		}
+	}
+
+	obj = tempObj;
+
+	delete[] tempObj;
+}
+void change_acc_info(Accounts* obj, int amount) {
+
+	int numberToChange;
+	show_acc_info(obj, amount);
+
+	cout << "Введите номер человека: ";
+	cin >> numberToChange;
+
+	Accounts* tempObj = new Accounts[amount];
+	//tempObj[1] = obj[1];
+	for (int i = 0; i < amount; i++) {
+		if (numberToChange == (i+1))
+		{
+			obj[i].role = 3;
+			set_acc_info(obj, i);
+		}
+		else {
+			tempObj[i] = obj[i];
+		}
+	}
+
+	obj = tempObj;
+
+	delete[] tempObj;
+}
+//-------------------------------------------------------------------
+void zadanie(Company* obj, int amount) {//разбить эту функцию на несколько
+	vector<string>  arr;//вектор типа стринг, хранит информация из структуры Company
+	vector<string> destArr;//тут хранятся все отделы(department)
+	for (int i = 0; i < amount - 1; i++) {//сортируем по порядку
+		for (int j = 0; j < amount - i - 1; j++) {
+			if (obj[j].department > obj[j + 1].department) {
+				swap(obj[j], obj[j + 1]);
+			}
+		}
+	}
+
+	for (int i = 0; i < amount; i++) {//заносим в вектор инфу
+		arr.emplace_back(obj[i].department);
+	}
+
+
+
+	for (int i = 0; i < arr.size(); i++) {//находим колво отделов
+		bool flag = false;
+		for (int j = 0; j < destArr.size(); j++) {
+			if (arr[i] == destArr[j]) {
+				flag = true;
+				break;
+			}
+		}
+		if (flag) continue;
+
+		destArr.emplace_back(arr[i]);
+	}
+
+	double *sum = new double[destArr.size()];
+
+	for (int i = 0; i < destArr.size(); i++) {
+		sum[i] = 0;
+	}
+
+	double *kolvoWorIntDep = new double[destArr.size()];//кол-во работников в отделе
+	for (int i = 0; i < destArr.size(); i++) {
+		kolvoWorIntDep[i] = 0;
+	}
+
+
+	int j = 0;
+	for (int i = 0; i < destArr.size(); i++) {//находим сумму за каждый отдел + колв-о работнико в отделе
+		while (destArr[i] == obj[j].department) {
+			sum[i] += obj[j].salary;
+			j++;
+			kolvoWorIntDep[i] += 1;
+		}
+	}
+	
+
+	for (int i = 0; i < destArr.size(); i++) {
+		cout << "Сумма выплат за месяц по отделу " << destArr[i] << " равна "<<sum[i] << endl;
+	}
+	cout << "-----------------------------------------------" << endl;
+
+	double *srsum = new double[destArr.size()];//находим среднюю зп по отделу
+	for (int i = 0; i < destArr.size(); i++) {
+		srsum[i] = sum[i] / kolvoWorIntDep[i];
+	}
+
+	for (int i = 0; i < destArr.size(); i++) {
+		cout << "Средняя заработная плата  за месяц по отделу " << destArr[i] << " равна " << srsum[i] << endl;
+	}
+
+	double zp;//зп которую пользователь вводит с клавы
+	cout << "Введи максимальную заработной платы: ";
+	cin >> zp;
+
+	cout << "-----------------------------------------------" << endl;
+
+	cout << "№\t" << "Имя\t" << "Фамилия\t" << setw(9) << right << "Oтдел" << setw(15) << right << "Должность\t" << setw(12) << right << "Зарплата" << endl;
+	cout << "--------------------------------------------------------------" << endl;
+	for (int i = 0; i < amount; i++) {
+		if(zp >= obj[i].salary)
+			cout << i + 1 << setw(10) << right << obj[i].name << setw(12) << right << obj[i].surname << setw(10) << right << obj[i].department << setw(14) << right << obj[i].post << setw(12) << right << obj[i].salary << endl;
+	}
+
+
+	delete[] sum;
+	delete[] srsum;
+	delete[] kolvoWorIntDep;
+}
+//-------------------------------------------------------------------
+bool check_for_last_admin(Accounts* obj,int amount) {//проверка на последнего админа
+	int numOfAdminAccounts=0;
+	for (int i = 0; i < amount; i++) {
+		if (obj[i].role == 1)
+			numOfAdminAccounts++;
+	}
+	if (numOfAdminAccounts == 0)
+		return false;
+	else
+		return true;
+
+}
